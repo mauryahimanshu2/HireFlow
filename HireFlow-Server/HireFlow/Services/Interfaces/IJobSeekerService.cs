@@ -19,4 +19,9 @@ public interface IJobSeekerService
         UpdateJobSeekerProfileDto dto);
 
     Task<bool> DeleteAsync(int userId);
+
+    Task<string?> UploadProfileImageAsync(int userId,IFormFile file);
+
+
+    Task<string?> UploadResumeAsync(int userId,IFormFile file);
 }

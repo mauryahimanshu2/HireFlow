@@ -27,6 +27,7 @@ builder.Services.AddScoped<IJwtService, JwtService>();
 
 builder.Services.AddScoped<IJobSeekerService, JobSeekerService>();
 
+builder.Services.AddScoped<ICloudinaryService, CloudinaryService>();
 // JWT Authentication
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>

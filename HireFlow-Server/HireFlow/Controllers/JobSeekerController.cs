@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using System.IdentityModel.Tokens.Jwt;
+using HireFlow.Helpers;
 
 namespace HireFlow.Controllers;
 
@@ -140,5 +141,73 @@ public class JobSeekerController : ControllerBase
         }
 
         return int.Parse(userId!);
+    }
+
+    // POST: api/jobseekers/profile/image
+    [HttpPost("profile/image")]
+    public async Task<IActionResult> UploadProfileImage(IFormFile file)
+    {
+        string? validationError = FileValidator.ValidateImage(file);
+
+        if (validationError != null)
+        {
+            return BadRequest(new
+            {
+                message = validationError
+            });
+        }
+
+        int userId = GetUserId();
+
+        var imageUrl = await _jobSeekerService
+            .UploadProfileImageAsync(userId, file);
+
+        if (imageUrl == null)
+        {
+            return NotFound(new
+            {
+                message = "Job seeker profile not found."
+            });
+        }
+
+        return Ok(new
+        {
+            message = "Profile image uploaded successfully.",
+            imageUrl
+        });
+    }
+
+    // POST: api/jobseekers/profile/resume
+    [HttpPost("profile/resume")]
+    public async Task<IActionResult> UploadResume(IFormFile file)
+    {
+        string? validationError = FileValidator.ValidateResume(file);
+
+        if (validationError != null)
+        {
+            return BadRequest(new
+            {
+                message = validationError
+            });
+        }
+
+        int userId = GetUserId();
+
+        var resumeUrl = await _jobSeekerService
+            .UploadResumeAsync(userId, file);
+
+        if (resumeUrl == null)
+        {
+            return NotFound(new
+            {
+                message = "Job seeker profile not found."
+            });
+        }
+
+        return Ok(new
+        {
+            message = "Resume uploaded successfully.",
+            resumeUrl
+        });
     }
 }

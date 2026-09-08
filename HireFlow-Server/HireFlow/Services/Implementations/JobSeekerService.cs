@@ -10,9 +10,12 @@ public class JobSeekerService : IJobSeekerService
 {
     private readonly ApplicationDbContext _context;
 
-    public JobSeekerService(ApplicationDbContext context)
+    private readonly ICloudinaryService _cloudinaryService;
+
+    public JobSeekerService(ApplicationDbContext context, ICloudinaryService cloudinaryService)
     {
         _context = context;
+        _cloudinaryService = cloudinaryService;
     }
 
     // CREATE
@@ -135,21 +138,85 @@ public class JobSeekerService : IJobSeekerService
     // DELETE
     public async Task<bool> DeleteAsync(int userId)
     {
-        var profile = await _context.JobSeekerProfiles
-            .FirstOrDefaultAsync(p => p.UserId == userId);
+        var user = await _context.Users
+            .Include(u => u.JobSeekerProfile)
+            .FirstOrDefaultAsync(u => u.Id == userId);
 
-        if (profile == null)
+        if (user == null)
         {
             return false;
         }
 
-        _context.JobSeekerProfiles.Remove(profile);
+        var profile = user.JobSeekerProfile;
+
+        if (profile != null)
+        {
+            // Delete job applications first
+            var applications = await _context.JobApplications
+                .Where(a => a.JobSeekerId == profile.Id)
+                .ToListAsync();
+
+            _context.JobApplications.RemoveRange(applications);
+
+            // Delete job seeker profile
+            _context.JobSeekerProfiles.Remove(profile);
+        }
+
+        // Delete user account
+        _context.Users.Remove(user);
 
         await _context.SaveChangesAsync();
 
         return true;
     }
 
+    // Upload Profile Image
+    public async Task<string?> UploadProfileImageAsync(
+    int userId,
+    IFormFile file)
+    {
+        var profile = await _context.JobSeekerProfiles
+            .FirstOrDefaultAsync(p => p.UserId == userId);
+
+        if (profile == null)
+        {
+            return null;
+        }
+
+        string imageUrl = await _cloudinaryService
+            .UploadImageAsync(file);
+
+        profile.ProfileImageUrl = imageUrl;
+        profile.UpdatedAt = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync();
+
+        return imageUrl;
+    }
+
+    // Upload Resume
+    public async Task<string?> UploadResumeAsync(
+    int userId,
+    IFormFile file)
+    {
+        var profile = await _context.JobSeekerProfiles
+            .FirstOrDefaultAsync(p => p.UserId == userId);
+
+        if (profile == null)
+        {
+            return null;
+        }
+
+        string resumeUrl = await _cloudinaryService
+            .UploadResumeAsync(file);
+
+        profile.ResumeUrl = resumeUrl;
+        profile.UpdatedAt = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync();
+
+        return resumeUrl;
+    }
 
     // Mapping Entity -> DTO
     private static JobSeekerProfileDto MapToDto(
@@ -171,4 +238,6 @@ public class JobSeekerService : IJobSeekerService
             UpdatedAt = profile.UpdatedAt
         };
     }
+
+
 }
