@@ -90,4 +90,33 @@ public class CloudinaryService : ICloudinaryService
 
         return result.SecureUrl.ToString();
     }
+
+    public async Task<string> UploadCompanyLogoAsync(IFormFile file)
+    {
+        if (file == null || file.Length == 0)
+        {
+            throw new ArgumentException("Company logo is required.");
+        }
+
+        await using var stream = file.OpenReadStream();
+
+        var uploadParams = new ImageUploadParams
+        {
+            File = new FileDescription(
+                file.FileName,
+                stream
+            ),
+            Folder = "hireflow/company-logos"
+        };
+
+        var result = await _cloudinary.UploadAsync(uploadParams);
+
+        if (result.Error != null)
+        {
+            throw new InvalidOperationException(
+                result.Error.Message);
+        }
+
+        return result.SecureUrl.ToString();
+    }
 }
