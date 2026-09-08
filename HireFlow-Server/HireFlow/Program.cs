@@ -25,6 +25,8 @@ builder.Services.AddScoped<PasswordHasher>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IJwtService, JwtService>();
 
+builder.Services.AddScoped<IJobSeekerService, JobSeekerService>();
+
 // JWT Authentication
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
