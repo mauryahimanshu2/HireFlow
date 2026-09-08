@@ -1,6 +1,8 @@
-﻿namespace HireFlow.Services.Interfaces
+﻿using HireFlow.Models;
+
+namespace HireFlow.Services.Interfaces;
+
+public interface IJwtService
 {
-    public interface IJwtService
-    {
-    }
+    string GenerateToken(User user);
 }

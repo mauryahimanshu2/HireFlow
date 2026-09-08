@@ -1,6 +1,10 @@
-﻿namespace HireFlow.Services.Interfaces
+﻿using HireFlow.DTOs.Auth;
+
+namespace HireFlow.Services.Interfaces;
+
+public interface IAuthService
 {
-    public interface IAuthService
-    {
-    }
+    Task<bool> RegisterAsync(RegisterDto dto);
+
+    Task<LoginResponseDto?> LoginAsync(LoginDto dto);
 }
