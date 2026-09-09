@@ -115,12 +115,20 @@ function RecruiterProfile() {
 
   // Upload recruiter profile image
   const handleImageUpload = async (event) => {
+    
     const file = event.target.files?.[0]
 
     if (!file) {
       return
     }
 
+    if (!profile) {
+  setPageError(
+    'Please create your recruiter profile before uploading an image.',
+  )
+  event.target.value = ''
+  return
+}
     // Save previous image in case upload fails
     const previousImage =
       profile?.profileImageUrl || null
@@ -286,23 +294,30 @@ function RecruiterProfile() {
             </div>
 
             {/* Upload button */}
-            <label className="mt-6 block cursor-pointer rounded-lg bg-blue-600 px-4 py-3 text-center font-medium text-white hover:bg-blue-700">
+{/* Upload button */}
+{profile ? (
+  <label className="mt-6 block cursor-pointer rounded-lg bg-blue-600 px-4 py-3 text-center font-medium text-white hover:bg-blue-700">
 
-              {imageLoading
-                ? 'Uploading...'
-                : imagePreview
-                  ? 'Change Image'
-                  : 'Upload Image'}
+    {imageLoading
+      ? 'Uploading...'
+      : imagePreview
+        ? 'Change Image'
+        : 'Upload Image'}
 
-              <input
-                type="file"
-                accept="image/jpeg,image/png,image/webp"
-                onChange={handleImageUpload}
-                disabled={imageLoading}
-                className="hidden"
-              />
+    <input
+      type="file"
+      accept="image/jpeg,image/png,image/webp"
+      onChange={handleImageUpload}
+      disabled={imageLoading}
+      className="hidden"
+    />
 
-            </label>
+  </label>
+) : (
+  <div className="mt-6 rounded-lg bg-gray-100 px-4 py-3 text-center text-sm text-gray-500">
+    Create your recruiter profile first to upload an image.
+  </div>
+)}
 
           </div>
 

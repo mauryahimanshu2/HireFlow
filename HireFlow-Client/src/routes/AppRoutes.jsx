@@ -1,15 +1,25 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { ROLES } from '../utils/constants'
+
 import Login from '../pages/Login'
 import Register from '../pages/Register'
+
 import ProtectedRoute from './ProtectedRoute'
 import PublicRoute from './PublicRoute'
+
+// Job Seeker
 import JobSeekerDashboard from '../pages/jobseeker/JobSeekerDashboard'
 import JobSeekerProfile from '../pages/jobseeker/JobSeekerProfile'
+import JobSeekerJobs from '../pages/jobseeker/Jobs'
+import JobSeekerJobDetails from '../pages/jobseeker/JobDetails'
+
+// Recruiter
 import RecruiterDashboard from '../pages/recruiter/RecruiterDashboard'
 import RecruiterProfile from '../pages/recruiter/RecruiterProfile'
 import Company from '../pages/recruiter/Company'
- 
+import RecruiterJobs from '../pages/recruiter/Jobs'
+import RecruiterJobFormPage from '../pages/recruiter/JobFormPage'
+
 
 function Home() {
   return (
@@ -30,6 +40,7 @@ function Home() {
     </div>
   )
 }
+
 
 function Unauthorized() {
   return (
@@ -58,6 +69,7 @@ function Unauthorized() {
   )
 }
 
+
 function Placeholder({ title, role }) {
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
@@ -79,10 +91,12 @@ function Placeholder({ title, role }) {
   )
 }
 
+
 function AppRoutes() {
   return (
     <Routes>
-      {/* Public Routes */}
+
+      {/* ==================== PUBLIC ROUTES ==================== */}
 
       <Route path="/" element={<Home />} />
 
@@ -90,87 +104,124 @@ function AppRoutes() {
         path="/unauthorized"
         element={<Unauthorized />}
       />
+
       <Route element={<PublicRoute />}>
-  <Route path="/login" element={<Login />} />
-  <Route path="/register" element={<Register />} />
-</Route>
+        <Route
+          path="/login"
+          element={<Login />}
+        />
 
-      {/* Job Seeker Routes */}
+        <Route
+          path="/register"
+          element={<Register />}
+        />
+      </Route>
 
-      <Route
-  element={
-    <ProtectedRoute
-      allowedRoles={[ROLES.JOB_SEEKER]}
-    />
-  }
->
-  <Route
-    path="/jobseeker/dashboard"
-    element={<JobSeekerDashboard />}
-  />
 
-  <Route
-    path="/jobseeker/profile"
-    element={<JobSeekerProfile />}
-  />
-
-  <Route
-    path="/jobseeker/applications"
-    element={
-      <Placeholder
-        title="My Applications"
-        role="Job Seeker"
-      />
-    }
-  />
-</Route>
-
-      {/* Recruiter Routes */}
+      {/* ==================== JOB SEEKER ROUTES ==================== */}
 
       <Route
-  element={
-    <ProtectedRoute
-      allowedRoles={[ROLES.RECRUITER]}
-    />
-  }
->
-  <Route
-    path="/recruiter/dashboard"
-    element={<RecruiterDashboard />}
-  />
+        element={
+          <ProtectedRoute
+            allowedRoles={[ROLES.JOB_SEEKER]}
+          />
+        }
+      >
 
-  <Route
-    path="/recruiter/profile"
-    element={<RecruiterProfile />}
-  />
+        <Route
+          path="/jobseeker/dashboard"
+          element={<JobSeekerDashboard />}
+        />
 
-  <Route
-    path="/recruiter/company"
-    element={<Company />}
-  />
+        <Route
+          path="/jobseeker/profile"
+          element={<JobSeekerProfile />}
+        />
 
-  <Route
-    path="/recruiter/jobs"
-    element={
-      <Placeholder
-        title="Manage Jobs"
-        role="Recruiter"
-      />
-    }
-  />
+        {/* Module 6 - Job Search */}
+        <Route
+          path="/jobseeker/jobs"
+          element={<JobSeekerJobs />}
+        />
 
-  <Route
-    path="/recruiter/applicants"
-    element={
-      <Placeholder
-        title="Applicants"
-        role="Recruiter"
-      />
-    }
-  />
-</Route>
+        {/* Module 6 - Job Details */}
+        <Route
+          path="/jobseeker/jobs/:jobId"
+          element={<JobSeekerJobDetails />}
+        />
 
-      {/* Admin Routes */}
+        {/* Future Module - Applications */}
+        <Route
+          path="/jobseeker/applications"
+          element={
+            <Placeholder
+              title="My Applications"
+              role="Job Seeker"
+            />
+          }
+        />
+
+      </Route>
+
+
+      {/* ==================== RECRUITER ROUTES ==================== */}
+
+      <Route
+        element={
+          <ProtectedRoute
+            allowedRoles={[ROLES.RECRUITER]}
+          />
+        }
+      >
+
+        <Route
+          path="/recruiter/dashboard"
+          element={<RecruiterDashboard />}
+        />
+
+        <Route
+          path="/recruiter/profile"
+          element={<RecruiterProfile />}
+        />
+
+        <Route
+          path="/recruiter/company"
+          element={<Company />}
+        />
+
+        {/* Module 6 - Manage Jobs */}
+        <Route
+          path="/recruiter/jobs"
+          element={<RecruiterJobs />}
+        />
+
+        {/* Module 6 - Create Job */}
+        <Route
+          path="/recruiter/jobs/create"
+          element={<RecruiterJobFormPage />}
+        />
+
+        {/* Module 6 - Edit Job */}
+        <Route
+          path="/recruiter/jobs/edit/:jobId"
+          element={<RecruiterJobFormPage />}
+        />
+
+        {/* Future Module - Applicants */}
+        <Route
+          path="/recruiter/applicants"
+          element={
+            <Placeholder
+              title="Applicants"
+              role="Recruiter"
+            />
+          }
+        />
+
+      </Route>
+
+
+      {/* ==================== ADMIN ROUTES ==================== */}
 
       <Route
         element={
@@ -179,6 +230,7 @@ function AppRoutes() {
           />
         }
       >
+
         <Route
           path="/admin/dashboard"
           element={
@@ -208,14 +260,17 @@ function AppRoutes() {
             />
           }
         />
+
       </Route>
 
-      {/* Unknown Routes */}
+
+      {/* ==================== UNKNOWN ROUTES ==================== */}
 
       <Route
         path="*"
         element={<Navigate to="/" replace />}
       />
+
     </Routes>
   )
 }
