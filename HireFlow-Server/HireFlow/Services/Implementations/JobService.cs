@@ -1,4 +1,4 @@
-﻿using HireFlow.Data;
+using HireFlow.Data;
 using HireFlow.DTOs.Job;
 using HireFlow.Models;
 using HireFlow.Services.Interfaces;
@@ -324,6 +324,26 @@ public class JobService : IJobService
         await _context.SaveChangesAsync();
 
         return true;
+    }
+
+    public async Task<List<JobResponseDto>> GetMyJobsAsync(int userId)
+    {
+        var recruiter = await _context.RecruiterProfiles
+            .FirstOrDefaultAsync(r => r.UserId == userId);
+
+        if (recruiter == null)
+        {
+            return new List<JobResponseDto>();
+        }
+
+        var jobs = await _context.Jobs
+            .Where(j => j.RecruiterId == recruiter.Id)
+            .OrderByDescending(j => j.CreatedAt)
+            .ToListAsync();
+
+        return jobs
+            .Select(MapToDto)
+            .ToList();
     }
 
     private static JobResponseDto MapToDto(Job job)

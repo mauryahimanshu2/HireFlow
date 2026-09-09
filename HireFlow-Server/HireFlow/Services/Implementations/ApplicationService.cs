@@ -1,4 +1,4 @@
-﻿using HireFlow.Data;
+using HireFlow.Data;
 using HireFlow.DTOs.Application;
 using HireFlow.Models;
 using HireFlow.Services.Interfaces;
@@ -21,6 +21,7 @@ public class ApplicationService : IApplicationService
     {
         // Find Job Seeker profile
         var jobSeeker = await _context.JobSeekerProfiles
+            .Include(js => js.User)
             .FirstOrDefaultAsync(p => p.UserId == userId);
 
         if (jobSeeker == null)
@@ -66,25 +67,7 @@ public class ApplicationService : IApplicationService
 
         await _context.SaveChangesAsync();
 
-        return new ApplicationResponseDto
-        {
-            Id = application.Id,
-
-            JobId = job.Id,
-            JobTitle = job.Title,
-
-            CompanyId = job.CompanyId,
-            CompanyName = job.Company.CompanyName,
-
-            JobSeekerId = jobSeeker.Id,
-            JobSeekerName = jobSeeker.FullName,
-
-            Status = application.Status,
-            AppliedAt = application.AppliedAt,
-            WithdrawnAt = application.WithdrawnAt,
-            RecruiterRemarks = application.RecruiterRemarks,
-            UpdatedAt = application.UpdatedAt
-        };
+        return MapToDto(application);
     }
 
     public async Task<List<ApplicationResponseDto>> GetMyApplicationsAsync(
@@ -94,6 +77,7 @@ public class ApplicationService : IApplicationService
             .Include(a => a.Job)
                 .ThenInclude(j => j.Company)
             .Include(a => a.JobSeeker)
+                .ThenInclude(js => js.User)
             .Where(a => a.JobSeeker.UserId == userId)
             .OrderByDescending(a => a.AppliedAt)
             .ToListAsync();
@@ -111,6 +95,7 @@ public class ApplicationService : IApplicationService
             .Include(a => a.Job)
                 .ThenInclude(j => j.Company)
             .Include(a => a.JobSeeker)
+                .ThenInclude(js => js.User)
             .FirstOrDefaultAsync(a =>
                 a.Id == applicationId &&
                 a.JobSeeker.UserId == userId);
@@ -169,8 +154,7 @@ public class ApplicationService : IApplicationService
 
         if (recruiter == null)
         {
-            throw new InvalidOperationException(
-                "Recruiter profile not found.");
+            return new List<ApplicationResponseDto>();
         }
 
         // Make sure recruiter owns this job
@@ -188,7 +172,33 @@ public class ApplicationService : IApplicationService
             .Include(a => a.Job)
                 .ThenInclude(j => j.Company)
             .Include(a => a.JobSeeker)
+                .ThenInclude(js => js.User)
             .Where(a => a.JobId == jobId)
+            .OrderByDescending(a => a.AppliedAt)
+            .ToListAsync();
+
+        return applications
+            .Select(MapToDto)
+            .ToList();
+    }
+
+    public async Task<List<ApplicationResponseDto>> GetAllRecruiterApplicationsAsync(
+        int userId)
+    {
+        var recruiter = await _context.RecruiterProfiles
+            .FirstOrDefaultAsync(r => r.UserId == userId);
+
+        if (recruiter == null)
+        {
+            return new List<ApplicationResponseDto>();
+        }
+
+        var applications = await _context.JobApplications
+            .Include(a => a.Job)
+                .ThenInclude(j => j.Company)
+            .Include(a => a.JobSeeker)
+                .ThenInclude(js => js.User)
+            .Where(a => a.Job.RecruiterId == recruiter.Id)
             .OrderByDescending(a => a.AppliedAt)
             .ToListAsync();
 
@@ -215,6 +225,7 @@ public class ApplicationService : IApplicationService
             .Include(a => a.Job)
                 .ThenInclude(j => j.Company)
             .Include(a => a.JobSeeker)
+                .ThenInclude(js => js.User)
             .FirstOrDefaultAsync(a =>
                 a.Id == applicationId &&
                 a.Job.RecruiterId == recruiter.Id);
@@ -223,6 +234,9 @@ public class ApplicationService : IApplicationService
         {
             return null;
         }
+
+        string rawStatus = (status ?? "").Trim();
+        string normalizedStatus = rawStatus.Replace(" ", "").Replace("_", "");
 
         var allowedStatuses = new[]
         {
@@ -235,17 +249,21 @@ public class ApplicationService : IApplicationService
             "Withdrawn"
         };
 
-        if (!allowedStatuses.Contains(status))
+        var matchedStatus = allowedStatuses.FirstOrDefault(s =>
+            string.Equals(s, normalizedStatus, StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(s, rawStatus, StringComparison.OrdinalIgnoreCase));
+
+        if (matchedStatus == null)
         {
             throw new InvalidOperationException(
-                "Invalid application status.");
+                $"Invalid application status: '{status}'. Valid statuses are: {string.Join(", ", allowedStatuses)}.");
         }
 
-        application.Status = status;
+        application.Status = matchedStatus;
         application.RecruiterRemarks = recruiterRemarks;
         application.UpdatedAt = DateTime.UtcNow;
 
-        if (status == "Withdrawn")
+        if (matchedStatus == "Withdrawn")
         {
             application.WithdrawnAt ??= DateTime.UtcNow;
         }
@@ -263,13 +281,21 @@ public class ApplicationService : IApplicationService
             Id = application.Id,
 
             JobId = application.JobId,
-            JobTitle = application.Job.Title,
+            JobTitle = application.Job?.Title ?? string.Empty,
 
-            CompanyId = application.Job.CompanyId,
-            CompanyName = application.Job.Company.CompanyName,
+            CompanyId = application.Job?.CompanyId ?? 0,
+            CompanyName = application.Job?.Company?.CompanyName ?? string.Empty,
 
             JobSeekerId = application.JobSeekerId,
-            JobSeekerName = application.JobSeeker.FullName,
+            JobSeekerName = application.JobSeeker?.FullName ?? string.Empty,
+            JobSeekerEmail = application.JobSeeker?.User?.Email,
+            JobSeekerPhone = application.JobSeeker?.Phone,
+            JobSeekerLocation = application.JobSeeker?.Location,
+            JobSeekerSkills = application.JobSeeker?.Skills,
+            JobSeekerEducation = application.JobSeeker?.Education,
+            JobSeekerExperience = application.JobSeeker?.Experience,
+            JobSeekerProfileImageUrl = application.JobSeeker?.ProfileImageUrl,
+            JobSeekerResumeUrl = application.JobSeeker?.ResumeUrl,
 
             Status = application.Status,
             AppliedAt = application.AppliedAt,

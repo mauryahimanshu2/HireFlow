@@ -24,6 +24,13 @@ function JobSeekerDashboard() {
             </Link>
 
             <Link
+              to="/jobseeker/jobs"
+              className="text-sm font-medium text-gray-700 hover:text-blue-600"
+            >
+              Find Jobs
+            </Link>
+
+            <Link
               to="/jobseeker/applications"
               className="text-sm font-medium text-gray-700 hover:text-blue-600"
             >
@@ -57,7 +64,7 @@ function JobSeekerDashboard() {
           </h1>
 
           <p className="mt-2 text-gray-600">
-            Manage your profile and track your job applications.
+            Manage your profile and search for your next job opportunity.
           </p>
         </div>
 
@@ -78,7 +85,7 @@ function JobSeekerDashboard() {
           </Link>
 
           <Link
-            to="/jobs"
+            to="/jobseeker/jobs"
             className="rounded-2xl bg-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
           >
             <div className="text-3xl">💼</div>

@@ -122,13 +122,13 @@ function RecruiterProfile() {
       return
     }
 
-    if (!profile) {
-  setPageError(
-    'Please create your recruiter profile before uploading an image.',
-  )
-  event.target.value = ''
-  return
-}
+     if (!profile) {
+    setPageError(
+      'Please create your recruiter profile before uploading an image.',
+    )
+    event.target.value = ''
+    return
+  }
     // Save previous image in case upload fails
     const previousImage =
       profile?.profileImageUrl || null

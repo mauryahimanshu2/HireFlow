@@ -6,6 +6,7 @@ import {
 } from 'react-router-dom'
 import JobForm from '../../components/recruiter/JobForm'
 import jobService from '../../services/jobService'
+import recruiterService from '../../services/recruiterService'
 
 function JobFormPage() {
   const navigate = useNavigate()
@@ -15,9 +16,7 @@ function JobFormPage() {
 
   const [job, setJob] = useState(null)
 
-  const [loading, setLoading] = useState(
-    isEditMode,
-  )
+  const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
 
   const [pageError, setPageError] = useState('')
@@ -30,6 +29,49 @@ function JobFormPage() {
       error.response?.data?.title ||
       fallback
     )
+  }
+
+  const checkRecruiterCompany = async () => {
+    try {
+      const profile =
+        await recruiterService.getProfile()
+
+      // Recruiter profile does not have a company
+      if (!profile?.companyId) {
+        navigate('/recruiter/company', {
+          replace: true,
+          state: {
+            message:
+              'Please create your company profile before creating a job.',
+          },
+        })
+
+        return false
+      }
+
+      return true
+    } catch (error) {
+      if (error.response?.status === 404) {
+        navigate('/recruiter/profile', {
+          replace: true,
+          state: {
+            message:
+              'Please create your recruiter profile first.',
+          },
+        })
+
+        return false
+      }
+
+      setPageError(
+        getErrorMessage(
+          error,
+          'Unable to verify recruiter profile.',
+        ),
+      )
+
+      return false
+    }
   }
 
   const loadJob = async () => {
@@ -58,7 +100,31 @@ function JobFormPage() {
   }
 
   useEffect(() => {
-    loadJob()
+    const initializePage = async () => {
+      setLoading(true)
+      setPageError('')
+
+      /*
+       * For both creating and editing a job,
+       * verify that the recruiter has a company.
+       */
+      const hasCompany =
+        await checkRecruiterCompany()
+
+      if (!hasCompany) {
+        setLoading(false)
+        return
+      }
+
+      // Load existing job only in edit mode
+      if (isEditMode) {
+        await loadJob()
+      } else {
+        setLoading(false)
+      }
+    }
+
+    initializePage()
   }, [jobId])
 
   const handleSubmit = async (formData) => {
@@ -105,7 +171,7 @@ function JobFormPage() {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gray-50">
         <div className="text-lg font-medium text-gray-600">
-          Loading job...
+          Checking recruiter profile...
         </div>
       </div>
     )
@@ -115,7 +181,6 @@ function JobFormPage() {
     <div className="min-h-screen bg-gray-50">
 
       {/* Navbar */}
-
       <nav className="border-b bg-white">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
 
@@ -139,6 +204,7 @@ function JobFormPage() {
       <main className="mx-auto max-w-4xl px-6 py-10">
 
         <div className="mb-8">
+
           <h1 className="text-3xl font-bold text-gray-900">
             {isEditMode
               ? 'Edit Job'
@@ -150,6 +216,7 @@ function JobFormPage() {
               ? 'Update your job posting.'
               : 'Create a new job posting.'}
           </p>
+
         </div>
 
         {pageError && (
@@ -175,6 +242,7 @@ function JobFormPage() {
         </div>
 
       </main>
+
     </div>
   )
 }

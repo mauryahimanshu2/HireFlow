@@ -8,8 +8,7 @@ function Company() {
   const navigate = useNavigate()
 
   const [company, setCompany] = useState(null)
-  const [recruiterProfile, setRecruiterProfile] =
-    useState(null)
+  const [recruiterProfile, setRecruiterProfile] = useState(null)
 
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -36,13 +35,26 @@ function Company() {
     setLoading(true)
     setPageError('')
 
+    let profile = null
+
     try {
       // Get recruiter profile
-      const profile =
-        await recruiterService.getProfile()
-
+      profile = await recruiterService.getProfile()
       setRecruiterProfile(profile)
+    } catch (error) {
+      if (error.response?.status === 404) {
+        setRecruiterProfile(null)
+        setLoading(false)
+        return
+      }
+    }
 
+    if (!profile) {
+      setLoading(false)
+      return
+    }
+
+    try {
       // Recruiter doesn't have a company yet
       if (!profile?.companyId) {
         setCompany(null)
@@ -51,8 +63,7 @@ function Company() {
       }
 
       // Backend returns a single company object
-      const companyData =
-        await companyService.getCompanies()
+      const companyData = await companyService.getCompanies()
 
       if (companyData?.id) {
         setCompany(companyData)
@@ -87,6 +98,11 @@ function Company() {
   // ==========================================
 
   const handleSubmit = async (formData) => {
+    if (!recruiterProfile) {
+      setPageError('You must create your Recruiter Profile before adding a company.')
+      return
+    }
+
     setSaving(true)
     setPageError('')
     setSuccessMessage('')
@@ -94,28 +110,22 @@ function Company() {
     try {
       if (company) {
         // Update existing company
-        const response =
-          await companyService.updateCompany(formData)
+        const response = await companyService.updateCompany(formData)
 
-        // Keep updated company in state
         setCompany(response)
 
         if (response?.logoUrl) {
           setLogoPreview(response.logoUrl)
         }
 
-        setSuccessMessage(
-          'Company updated successfully.',
-        )
+        setSuccessMessage('Company updated successfully.')
 
-        // Redirect to recruiter dashboard
         setTimeout(() => {
           navigate('/recruiter/dashboard')
         }, 700)
       } else {
         // Create company
-        const response =
-          await companyService.createCompany(formData)
+        const response = await companyService.createCompany(formData)
 
         setCompany(response)
 
@@ -123,16 +133,11 @@ function Company() {
           setLogoPreview(response.logoUrl)
         }
 
-        // Refresh recruiter profile because the backend
-        // associates the company with the recruiter.
-        const updatedProfile =
-          await recruiterService.getProfile()
-
+        // Refresh recruiter profile because backend associates company with recruiter
+        const updatedProfile = await recruiterService.getProfile()
         setRecruiterProfile(updatedProfile)
 
-        setSuccessMessage(
-          'Company created successfully.',
-        )
+        setSuccessMessage('Company created successfully.')
       }
     } catch (error) {
       setPageError(
@@ -157,29 +162,17 @@ function Company() {
       return
     }
 
-    // Save previous logo in case upload fails
-    const previousLogo =
-      company?.logoUrl || null
-
-    // Create temporary local preview
+    const previousLogo = company?.logoUrl || null
     const localPreview = URL.createObjectURL(file)
 
-    // Show image immediately
     setLogoPreview(localPreview)
-
     setLogoLoading(true)
     setPageError('')
     setSuccessMessage('')
 
     try {
-      const response =
-        await companyService.uploadLogo(file)
+      const response = await companyService.uploadLogo(file)
 
-      /*
-       * Don't replace the complete company object.
-       * The upload endpoint returns the updated logo,
-       * not necessarily the complete company.
-       */
       setCompany((previousCompany) => {
         if (!previousCompany) {
           return previousCompany
@@ -193,17 +186,12 @@ function Company() {
 
       if (response?.logoUrl) {
         setLogoPreview(response.logoUrl)
-
         URL.revokeObjectURL(localPreview)
       }
 
-      setSuccessMessage(
-        'Company logo uploaded successfully.',
-      )
+      setSuccessMessage('Company logo uploaded successfully.')
     } catch (error) {
-      // Restore previous logo if upload fails
       setLogoPreview(previousLogo)
-
       URL.revokeObjectURL(localPreview)
 
       setPageError(
@@ -214,8 +202,6 @@ function Company() {
       )
     } finally {
       setLogoLoading(false)
-
-      // Allow selecting the same file again
       event.target.value = ''
     }
   }
@@ -243,15 +229,10 @@ function Company() {
       setCompany(null)
       setLogoPreview(null)
 
-      // Refresh recruiter profile
-      const updatedProfile =
-        await recruiterService.getProfile()
-
+      const updatedProfile = await recruiterService.getProfile()
       setRecruiterProfile(updatedProfile)
 
-      setSuccessMessage(
-        'Company deleted successfully.',
-      )
+      setSuccessMessage('Company deleted successfully.')
     } catch (error) {
       setPageError(
         getErrorMessage(
@@ -264,10 +245,6 @@ function Company() {
     }
   }
 
-  // ==========================================
-  // Loading
-  // ==========================================
-
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gray-50">
@@ -278,18 +255,12 @@ function Company() {
     )
   }
 
-  // ==========================================
-  // UI
-  // ==========================================
-
   return (
     <div className="min-h-screen bg-gray-50">
 
       {/* Navbar */}
-
       <nav className="border-b bg-white">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-
           <Link
             to="/recruiter/dashboard"
             className="text-2xl font-bold text-blue-600"
@@ -303,28 +274,46 @@ function Company() {
           >
             Dashboard
           </Link>
-
         </div>
       </nav>
 
       {/* Main */}
-
       <main className="mx-auto max-w-6xl px-6 py-10">
 
         {/* Heading */}
-
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">
             Company Management
           </h1>
-
           <p className="mt-2 text-gray-600">
             Manage your company information and logo.
           </p>
         </div>
 
-        {/* Error */}
+        {/* Missing Profile Warning */}
+        {!recruiterProfile && (
+          <div className="mb-8 rounded-2xl border border-amber-200 bg-amber-50 p-6 shadow-sm">
+            <div className="flex items-start gap-4">
+              <div className="text-3xl">⚠️</div>
+              <div className="flex-1">
+                <h3 className="text-lg font-bold text-amber-900">
+                  Recruiter Profile Required
+                </h3>
+                <p className="mt-1 text-sm text-amber-800">
+                  You must create your Recruiter Profile before you can add or manage a company.
+                </p>
+                <Link
+                  to="/recruiter/profile"
+                  className="mt-4 inline-block rounded-lg bg-amber-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-amber-700"
+                >
+                  Create Recruiter Profile First
+                </Link>
+              </div>
+            </div>
+          </div>
+        )}
 
+        {/* Error */}
         {pageError && (
           <div className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
             {pageError}
@@ -332,106 +321,87 @@ function Company() {
         )}
 
         {/* Success */}
-
         {successMessage && (
           <div className="mb-6 rounded-lg border border-green-200 bg-green-50 p-4 text-sm text-green-700">
             {successMessage}
           </div>
         )}
 
-        {/* No company */}
-
-        {!company && (
+        {/* No company notice */}
+        {recruiterProfile && !company && (
           <div className="mb-6 rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm text-blue-700">
-            You don't have a company yet. Create your company
-            profile below.
+            You don't have a company yet. Create your company profile below.
           </div>
         )}
 
-        <div className="grid gap-8 lg:grid-cols-3">
+        {recruiterProfile && (
+          <div className="grid gap-8 lg:grid-cols-3">
 
-          {/* ====================================== */}
-          {/* Company Logo */}
-          {/* ====================================== */}
+            {/* Logo Section */}
+            <div className="rounded-2xl bg-white p-6 shadow-sm">
+              <h2 className="text-xl font-bold text-gray-900">
+                Company Logo
+              </h2>
 
-          <div className="rounded-2xl bg-white p-6 shadow-sm">
+              <div className="mt-6 flex justify-center">
+                {logoPreview ? (
+                  <img
+                    src={logoPreview}
+                    alt="Company logo"
+                    className="h-40 w-40 rounded-2xl object-cover ring-4 ring-gray-100"
+                  />
+                ) : (
+                  <div className="flex h-40 w-40 items-center justify-center rounded-2xl bg-gray-100 text-5xl">
+                    🏢
+                  </div>
+                )}
+              </div>
 
-            <h2 className="text-xl font-bold text-gray-900">
-              Company Logo
-            </h2>
+              {company && (
+                <label className="mt-6 block cursor-pointer rounded-lg bg-blue-600 px-4 py-3 text-center font-medium text-white hover:bg-blue-700">
+                  {logoLoading
+                    ? 'Uploading...'
+                    : logoPreview
+                      ? 'Change Logo'
+                      : 'Upload Logo'}
 
-            <div className="mt-6 flex justify-center">
-
-              {logoPreview ? (
-                <img
-                  src={logoPreview}
-                  alt="Company logo"
-                  className="h-40 w-40 rounded-2xl object-cover ring-4 ring-gray-100"
-                />
-              ) : (
-                <div className="flex h-40 w-40 items-center justify-center rounded-2xl bg-gray-100 text-5xl">
-                  🏢
-                </div>
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    onChange={handleLogoUpload}
+                    disabled={logoLoading}
+                    className="hidden"
+                  />
+                </label>
               )}
-
             </div>
 
-            {company && (
-              <label className="mt-6 block cursor-pointer rounded-lg bg-blue-600 px-4 py-3 text-center font-medium text-white hover:bg-blue-700">
+            {/* Form Section */}
+            <div className="rounded-2xl bg-white p-6 shadow-sm lg:col-span-2">
+              <h2 className="mb-6 text-xl font-bold text-gray-900">
+                Company Information
+              </h2>
 
-                {logoLoading
-                  ? 'Uploading...'
-                  : logoPreview
-                    ? 'Change Logo'
-                    : 'Upload Logo'}
+              <CompanyForm
+                company={company}
+                onSubmit={handleSubmit}
+                loading={saving}
+              />
 
-                <input
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp"
-                  onChange={handleLogoUpload}
-                  disabled={logoLoading}
-                  className="hidden"
-                />
-
-              </label>
-            )}
-
-          </div>
-
-          {/* ====================================== */}
-          {/* Company Form */}
-          {/* ====================================== */}
-
-          <div className="rounded-2xl bg-white p-6 shadow-sm lg:col-span-2">
-
-            <h2 className="mb-6 text-xl font-bold text-gray-900">
-              Company Information
-            </h2>
-
-            <CompanyForm
-              company={company}
-              onSubmit={handleSubmit}
-              loading={saving}
-            />
-
-            {/* Delete */}
-
-            {company && (
-              <button
-                type="button"
-                onClick={handleDelete}
-                disabled={saving}
-                className="mt-4 w-full rounded-lg border border-red-300 px-4 py-3 font-semibold text-red-600 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                {saving
-                  ? 'Processing...'
-                  : 'Delete Company'}
-              </button>
-            )}
+              {company && (
+                <button
+                  type="button"
+                  onClick={handleDelete}
+                  disabled={saving}
+                  className="mt-4 w-full rounded-lg border border-red-300 px-4 py-3 font-semibold text-red-600 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {saving ? 'Processing...' : 'Delete Company'}
+                </button>
+              )}
+            </div>
 
           </div>
-
-        </div>
+        )}
       </main>
     </div>
   )

@@ -1,4 +1,4 @@
-﻿using HireFlow.DTOs.JobSeeker;
+using HireFlow.DTOs.JobSeeker;
 using HireFlow.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -32,9 +32,7 @@ public class JobSeekerController : ControllerBase
             userId,
             dto);
 
-        return CreatedAtAction(
-            nameof(GetProfile),
-            profile);
+        return Ok(profile);
     }
 
 

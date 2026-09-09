@@ -1,4 +1,4 @@
-﻿using HireFlow.DTOs.Application;
+using HireFlow.DTOs.Application;
 
 namespace HireFlow.Services.Interfaces;
 
@@ -22,6 +22,9 @@ public interface IApplicationService
     Task<List<ApplicationResponseDto>> GetApplicantsAsync(
         int userId,
         int jobId);
+
+    Task<List<ApplicationResponseDto>> GetAllRecruiterApplicationsAsync(
+        int userId);
 
     Task<ApplicationResponseDto?> UpdateStatusAsync(
         int userId,

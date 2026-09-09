@@ -1,4 +1,4 @@
-﻿namespace HireFlow.DTOs.Application;
+namespace HireFlow.DTOs.Application;
 
 public class ApplicationResponseDto
 {
@@ -12,6 +12,14 @@ public class ApplicationResponseDto
 
     public int JobSeekerId { get; set; }
     public string JobSeekerName { get; set; } = string.Empty;
+    public string? JobSeekerEmail { get; set; }
+    public string? JobSeekerPhone { get; set; }
+    public string? JobSeekerLocation { get; set; }
+    public string? JobSeekerSkills { get; set; }
+    public string? JobSeekerEducation { get; set; }
+    public string? JobSeekerExperience { get; set; }
+    public string? JobSeekerProfileImageUrl { get; set; }
+    public string? JobSeekerResumeUrl { get; set; }
 
     public string Status { get; set; } = string.Empty;
 

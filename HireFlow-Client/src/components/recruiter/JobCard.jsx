@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom'
+
 function JobCard({
   job,
   onEdit,
@@ -118,6 +120,7 @@ function JobCard({
 
       <div className="mt-6 flex flex-wrap gap-3 border-t pt-5">
 
+        {/* Edit */}
         <button
           type="button"
           onClick={() => onEdit(job)}
@@ -127,6 +130,15 @@ function JobCard({
           Edit
         </button>
 
+        {/* Applicants */}
+        <Link
+          to={`/recruiter/applicants?jobId=${job.id}`}
+          className="rounded-lg bg-purple-600 px-4 py-2 text-sm font-semibold text-white hover:bg-purple-700"
+        >
+          Applicants
+        </Link>
+
+        {/* Activate / Deactivate */}
         <button
           type="button"
           onClick={() =>
@@ -140,6 +152,7 @@ function JobCard({
             : 'Activate'}
         </button>
 
+        {/* Delete */}
         <button
           type="button"
           onClick={() => onDelete(job)}

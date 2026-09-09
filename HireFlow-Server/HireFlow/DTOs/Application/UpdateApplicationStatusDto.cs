@@ -1,6 +1,7 @@
-﻿namespace HireFlow.DTOs.Application
+namespace HireFlow.DTOs.Application;
+
+public class UpdateApplicationStatusDto
 {
-    public class UpdateApplicationStatusDto
-    {
-    }
+    public string? Status { get; set; }
+    public string? RecruiterRemarks { get; set; }
 }

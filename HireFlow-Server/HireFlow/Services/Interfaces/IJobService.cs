@@ -1,4 +1,4 @@
-﻿using HireFlow.DTOs.Job;
+using HireFlow.DTOs.Job;
 
 namespace HireFlow.Services.Interfaces;
 
@@ -28,5 +28,6 @@ public interface IJobService
         int userId,
         int jobId);
 
-     
+    Task<List<JobResponseDto>> GetMyJobsAsync(
+        int userId);
 }

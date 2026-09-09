@@ -1,4 +1,4 @@
-﻿using HireFlow.DTOs.Application;
+using HireFlow.DTOs.Application;
 using HireFlow.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -112,32 +112,60 @@ public class ApplicationController : ControllerBase
         return Ok(applicants);
     }
 
+    // Recruiter: View all applicants across all jobs
+    [HttpGet("recruiter/all")]
+    [Authorize(Roles = "Recruiter")]
+    public async Task<IActionResult> GetAllApplicants()
+    {
+        int userId = GetUserId();
+
+        var applicants =
+            await _applicationService.GetAllRecruiterApplicationsAsync(userId);
+
+        return Ok(applicants);
+    }
+
     // Recruiter: Update application status
     [HttpPatch("{applicationId:int}/status")]
     [Authorize(Roles = "Recruiter")]
     public async Task<IActionResult> UpdateStatus(
         int applicationId,
-        string status,
-        string? recruiterRemarks)
+        [FromBody] UpdateApplicationStatusDto? dto,
+        [FromQuery] string? status,
+        [FromQuery] string? recruiterRemarks)
     {
-        int userId = GetUserId();
+        string? targetStatus = dto?.Status ?? status;
+        string? targetRemarks = dto?.RecruiterRemarks ?? recruiterRemarks;
 
-        var application =
-            await _applicationService.UpdateStatusAsync(
-                userId,
-                applicationId,
-                status,
-                recruiterRemarks);
-
-        if (application == null)
+        if (string.IsNullOrWhiteSpace(targetStatus))
         {
-            return NotFound(new
-            {
-                message = "Application not found or you do not have permission."
-            });
+            return BadRequest(new { message = "Status is required." });
         }
 
-        return Ok(application);
+        int userId = GetUserId();
+
+        try
+        {
+            var application = await _applicationService.UpdateStatusAsync(
+                userId,
+                applicationId,
+                targetStatus,
+                targetRemarks);
+
+            if (application == null)
+            {
+                return NotFound(new
+                {
+                    message = "Application not found or you do not have permission to update it."
+                });
+            }
+
+            return Ok(application);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
     private int GetUserId()

@@ -44,6 +44,11 @@ const jobService = {
     return response.data
   },
 
+  async getMyJobs() {
+    const response = await api.get('/jobs/my')
+    return response.data
+  },
+
   async createJob(jobData) {
     const response = await api.post('/jobs', jobData)
     return response.data

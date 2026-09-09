@@ -1,16 +1,19 @@
 import { useEffect, useState } from 'react'
-import {
-  Link,
-  useParams,
-} from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import jobService from '../../services/jobService'
+import applicationService from '../../services/applicationService'
 
 function JobDetails() {
   const { jobId } = useParams()
+  const navigate = useNavigate()
 
   const [job, setJob] = useState(null)
+
   const [loading, setLoading] = useState(true)
-  const [pageError, setPageError] = useState('')
+  const [applying, setApplying] = useState(false)
+
+  const [error, setError] = useState('')
+  const [successMessage, setSuccessMessage] = useState('')
 
   const getErrorMessage = (error, fallback) => {
     return (
@@ -23,15 +26,15 @@ function JobDetails() {
   useEffect(() => {
     const loadJob = async () => {
       setLoading(true)
-      setPageError('')
+      setError('')
 
       try {
-        const response =
+        const data =
           await jobService.getJobById(jobId)
 
-        setJob(response)
+        setJob(data)
       } catch (error) {
-        setPageError(
+        setError(
           getErrorMessage(
             error,
             'Unable to load job details.',
@@ -45,34 +48,27 @@ function JobDetails() {
     loadJob()
   }, [jobId])
 
-  const formatSalary = () => {
-    if (
-      job?.salaryMin == null &&
-      job?.salaryMax == null
-    ) {
-      return 'Salary not specified'
-    }
+  const handleApply = async () => {
+    setApplying(true)
+    setError('')
+    setSuccessMessage('')
 
-    if (
-      job?.salaryMin != null &&
-      job?.salaryMax != null
-    ) {
-      return `₹${Number(
-        job.salaryMin,
-      ).toLocaleString()} - ₹${Number(
-        job.salaryMax,
-      ).toLocaleString()}`
-    }
+    try {
+      await applicationService.applyForJob(jobId)
 
-    if (job?.salaryMin != null) {
-      return `From ₹${Number(
-        job.salaryMin,
-      ).toLocaleString()}`
+      setSuccessMessage(
+        'Application submitted successfully.',
+      )
+    } catch (error) {
+      setError(
+        getErrorMessage(
+          error,
+          'Unable to submit application.',
+        ),
+      )
+    } finally {
+      setApplying(false)
     }
-
-    return `Up to ₹${Number(
-      job.salaryMax,
-    ).toLocaleString()}`
   }
 
   if (loading) {
@@ -85,22 +81,18 @@ function JobDetails() {
     )
   }
 
-  if (pageError) {
+  if (!job) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50 px-6">
-        <div className="rounded-2xl bg-white p-8 text-center shadow-sm">
+      <div className="flex min-h-screen items-center justify-center bg-gray-50">
+        <div className="text-center">
 
-          <h2 className="text-xl font-bold text-gray-900">
-            Unable to load job
-          </h2>
-
-          <p className="mt-2 text-red-600">
-            {pageError}
-          </p>
+          <h1 className="text-2xl font-bold text-gray-900">
+            Job Not Found
+          </h1>
 
           <Link
             to="/jobseeker/jobs"
-            className="mt-6 inline-block rounded-lg bg-blue-600 px-5 py-3 font-semibold text-white hover:bg-blue-700"
+            className="mt-5 inline-block rounded-lg bg-blue-600 px-5 py-3 font-semibold text-white"
           >
             Back to Jobs
           </Link>
@@ -110,15 +102,10 @@ function JobDetails() {
     )
   }
 
-  if (!job) {
-    return null
-  }
-
   return (
     <div className="min-h-screen bg-gray-50">
 
       {/* Navbar */}
-
       <nav className="border-b bg-white">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
 
@@ -129,52 +116,116 @@ function JobDetails() {
             HireFlow
           </Link>
 
-          <Link
-            to="/jobseeker/jobs"
-            className="rounded-lg bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200"
-          >
-            Back to Jobs
-          </Link>
+          <div className="flex gap-3">
+
+            <Link
+              to="/jobseeker/jobs"
+              className="rounded-lg bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700"
+            >
+              Find Jobs
+            </Link>
+
+            <Link
+              to="/jobseeker/applications"
+              className="rounded-lg bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700"
+            >
+              My Applications
+            </Link>
+
+          </div>
 
         </div>
       </nav>
 
       <main className="mx-auto max-w-5xl px-6 py-10">
 
-        <div className="rounded-2xl bg-white p-8 shadow-sm">
+        <Link
+          to="/jobseeker/jobs"
+          className="text-sm font-medium text-blue-600"
+        >
+          ← Back to Jobs
+        </Link>
 
-          {/* Title */}
+        <div className="mt-6 rounded-2xl bg-white p-8 shadow-sm">
 
-          <div className="border-b pb-6">
+          {/* Header */}
+          <div className="flex flex-col justify-between gap-6 sm:flex-row">
 
-            <div className="flex flex-col justify-between gap-4 md:flex-row">
+            <div>
 
-              <div>
+              <div className="flex flex-wrap items-center gap-3">
 
                 <h1 className="text-3xl font-bold text-gray-900">
                   {job.title}
                 </h1>
 
-                <p className="mt-2 text-lg font-semibold text-blue-600">
-                  {job.companyName ||
-                    'Company'}
-                </p>
+                {job.isActive ? (
+                  <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700">
+                    Active
+                  </span>
+                ) : (
+                  <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-600">
+                    Inactive
+                  </span>
+                )}
 
               </div>
 
-              <span className="h-fit rounded-full bg-green-100 px-4 py-2 text-sm font-semibold text-green-700">
-                {job.isActive
-                  ? 'Active'
-                  : 'Inactive'}
-              </span>
+              <p className="mt-3 text-lg text-gray-600">
+                {job.companyName || 'Company'}
+              </p>
 
             </div>
 
+            {/* Apply */}
+            {job.isActive && (
+              <button
+                type="button"
+                onClick={handleApply}
+                disabled={applying}
+                className="h-fit rounded-lg bg-blue-600 px-6 py-3 font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {applying
+                  ? 'Applying...'
+                  : 'Apply Now'}
+              </button>
+            )}
+
           </div>
 
-          {/* Job information */}
+          {/* Messages */}
+          {error && (
+            <div className="mt-6 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+              {error}
+            </div>
+          )}
 
-          <div className="grid gap-6 border-b py-6 md:grid-cols-2">
+          {successMessage && (
+            <div className="mt-6 rounded-lg border border-green-200 bg-green-50 p-4 text-sm text-green-700">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+
+                <span>
+                  {successMessage}
+                </span>
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    navigate(
+                      '/jobseeker/applications',
+                    )
+                  }
+                  className="font-semibold text-green-800 underline"
+                >
+                  View Applications
+                </button>
+
+              </div>
+            </div>
+          )}
+
+          {/* Job information */}
+          <div className="mt-8 grid gap-6 border-t pt-8 sm:grid-cols-2 lg:grid-cols-3">
 
             <div>
               <p className="text-sm text-gray-500">
@@ -182,8 +233,7 @@ function JobDetails() {
               </p>
 
               <p className="mt-1 font-semibold text-gray-900">
-                {job.location ||
-                  'Not specified'}
+                {job.location || 'Not specified'}
               </p>
             </div>
 
@@ -193,8 +243,7 @@ function JobDetails() {
               </p>
 
               <p className="mt-1 font-semibold text-gray-900">
-                {job.employmentType ||
-                  'Not specified'}
+                {job.employmentType || 'Not specified'}
               </p>
             </div>
 
@@ -215,15 +264,31 @@ function JobDetails() {
               </p>
 
               <p className="mt-1 font-semibold text-gray-900">
-                {formatSalary()}
+                {job.salaryMin != null ||
+                job.salaryMax != null
+                  ? `${job.salaryMin ?? '—'} - ${
+                      job.salaryMax ?? '—'
+                    }`
+                  : 'Not specified'}
+              </p>
+            </div>
+
+            <div>
+              <p className="text-sm text-gray-500">
+                Posted
+              </p>
+
+              <p className="mt-1 font-semibold text-gray-900">
+                {new Date(
+                  job.createdAt,
+                ).toLocaleDateString()}
               </p>
             </div>
 
           </div>
 
           {/* Description */}
-
-          <section className="py-6">
+          <div className="mt-10 border-t pt-8">
 
             <h2 className="text-xl font-bold text-gray-900">
               Job Description
@@ -233,34 +298,40 @@ function JobDetails() {
               {job.description}
             </p>
 
-          </section>
+          </div>
 
           {/* Skills */}
-
           {job.skills && (
-            <section className="border-t py-6">
+            <div className="mt-10 border-t pt-8">
 
               <h2 className="text-xl font-bold text-gray-900">
                 Required Skills
               </h2>
 
-              <p className="mt-4 whitespace-pre-line text-gray-600">
-                {job.skills}
-              </p>
+              <div className="mt-4 flex flex-wrap gap-2">
 
-            </section>
+                {job.skills
+                  .split(',')
+                  .map((skill) => skill.trim())
+                  .filter(Boolean)
+                  .map((skill) => (
+                    <span
+                      key={skill}
+                      className="rounded-full bg-blue-50 px-3 py-1.5 text-sm font-medium text-blue-700"
+                    >
+                      {skill}
+                    </span>
+                  ))}
+
+              </div>
+
+            </div>
           )}
-
-          {/* Apply will be added in Module 7 */}
-
-          <div className="mt-6 rounded-lg border border-blue-100 bg-blue-50 p-4 text-sm text-blue-700">
-            Application functionality will be
-            available in the Applications module.
-          </div>
 
         </div>
 
       </main>
+
     </div>
   )
 }

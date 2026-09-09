@@ -1,4 +1,4 @@
-﻿using HireFlow.DTOs.Job;
+using HireFlow.DTOs.Job;
 using HireFlow.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -59,6 +59,19 @@ public class JobController : ControllerBase
     {
         var jobs = await _jobService
             .GetAllAsync(   dto);
+
+        return Ok(jobs);
+    }
+
+    // Recruiter views their own posted jobs
+    [HttpGet("my")]
+    [Authorize(Roles = "Recruiter")]
+    public async Task<IActionResult> GetMyJobs()
+    {
+        int userId = GetUserId();
+
+        var jobs = await _jobService
+            .GetMyJobsAsync(userId);
 
         return Ok(jobs);
     }

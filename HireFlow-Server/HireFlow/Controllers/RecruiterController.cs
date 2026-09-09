@@ -1,4 +1,4 @@
-﻿using HireFlow.Data;
+using HireFlow.Data;
 using HireFlow.DTOs.Recruiter;
 using HireFlow.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -35,9 +35,7 @@ public class RecruiterController : ControllerBase
         var profile = await _recruiterService
             .CreateAsync(userId, dto);
 
-        return CreatedAtAction(
-            nameof(GetProfile),
-            profile);
+        return Ok(profile);
     }
 
     [HttpGet("profile")]
@@ -129,18 +127,25 @@ public class RecruiterController : ControllerBase
         var profile = await _context.RecruiterProfiles
             .FirstOrDefaultAsync(p => p.UserId == userId);
 
-        if (profile == null)
-        {
-            return NotFound(new
-            {
-                message = "Recruiter profile not found."
-            });
-        }
-
         var imageUrl = await _cloudinaryService.UploadImageAsync(file);
 
-        profile.ProfileImageUrl = imageUrl;
-        profile.UpdatedAt = DateTime.UtcNow;
+        if (profile == null)
+        {
+            string? userName = User.FindFirstValue(ClaimTypes.Name) ?? User.FindFirstValue(JwtRegisteredClaimNames.Name);
+            profile = new HireFlow.Models.RecruiterProfile
+            {
+                UserId = userId,
+                FullName = string.IsNullOrWhiteSpace(userName) ? "Recruiter" : userName,
+                ProfileImageUrl = imageUrl,
+                CreatedAt = DateTime.UtcNow
+            };
+            _context.RecruiterProfiles.Add(profile);
+        }
+        else
+        {
+            profile.ProfileImageUrl = imageUrl;
+            profile.UpdatedAt = DateTime.UtcNow;
+        }
 
         await _context.SaveChangesAsync();
 

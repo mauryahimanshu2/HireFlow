@@ -19,6 +19,9 @@ import RecruiterProfile from '../pages/recruiter/RecruiterProfile'
 import Company from '../pages/recruiter/Company'
 import RecruiterJobs from '../pages/recruiter/Jobs'
 import RecruiterJobFormPage from '../pages/recruiter/JobFormPage'
+import Applications from '../pages/jobseeker/Applications'
+import ApplicationDetails from '../pages/jobseeker/ApplicationDetails'
+import Applicants from '../pages/recruiter/Applicants'
 
 
 function Home() {
@@ -152,14 +155,14 @@ function AppRoutes() {
 
         {/* Future Module - Applications */}
         <Route
-          path="/jobseeker/applications"
-          element={
-            <Placeholder
-              title="My Applications"
-              role="Job Seeker"
-            />
-          }
-        />
+  path="/jobseeker/applications"
+  element={<Applications />}
+/>
+
+<Route
+  path="/jobseeker/applications/:applicationId"
+  element={<ApplicationDetails />}
+/>
 
       </Route>
 
@@ -208,15 +211,10 @@ function AppRoutes() {
         />
 
         {/* Future Module - Applicants */}
-        <Route
-          path="/recruiter/applicants"
-          element={
-            <Placeholder
-              title="Applicants"
-              role="Recruiter"
-            />
-          }
-        />
+       <Route
+  path="/recruiter/applicants"
+  element={<Applicants />}
+/>
 
       </Route>
 

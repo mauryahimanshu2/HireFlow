@@ -10,6 +10,7 @@ public static class AdminSeeder
         ApplicationDbContext context,
         PasswordHasher passwordHasher)
     {
+        
         bool adminExists = await context.Users
             .AnyAsync(u => u.Role == "Admin");
 
