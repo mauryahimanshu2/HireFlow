@@ -6,6 +6,9 @@ import ProtectedRoute from './ProtectedRoute'
 import PublicRoute from './PublicRoute'
 import JobSeekerDashboard from '../pages/jobseeker/JobSeekerDashboard'
 import JobSeekerProfile from '../pages/jobseeker/JobSeekerProfile'
+import RecruiterDashboard from '../pages/recruiter/RecruiterDashboard'
+import RecruiterProfile from '../pages/recruiter/RecruiterProfile'
+import Company from '../pages/recruiter/Company'
  
 
 function Home() {
@@ -125,62 +128,47 @@ function AppRoutes() {
       {/* Recruiter Routes */}
 
       <Route
-        element={
-          <ProtectedRoute
-            allowedRoles={[ROLES.RECRUITER]}
-          />
-        }
-      >
-        <Route
-          path="/recruiter/dashboard"
-          element={
-            <Placeholder
-              title="Recruiter Dashboard"
-              role="Recruiter"
-            />
-          }
-        />
+  element={
+    <ProtectedRoute
+      allowedRoles={[ROLES.RECRUITER]}
+    />
+  }
+>
+  <Route
+    path="/recruiter/dashboard"
+    element={<RecruiterDashboard />}
+  />
 
-        <Route
-          path="/recruiter/profile"
-          element={
-            <Placeholder
-              title="Recruiter Profile"
-              role="Recruiter"
-            />
-          }
-        />
+  <Route
+    path="/recruiter/profile"
+    element={<RecruiterProfile />}
+  />
 
-        <Route
-          path="/recruiter/company"
-          element={
-            <Placeholder
-              title="Company Management"
-              role="Recruiter"
-            />
-          }
-        />
+  <Route
+    path="/recruiter/company"
+    element={<Company />}
+  />
 
-        <Route
-          path="/recruiter/jobs"
-          element={
-            <Placeholder
-              title="Manage Jobs"
-              role="Recruiter"
-            />
-          }
-        />
+  <Route
+    path="/recruiter/jobs"
+    element={
+      <Placeholder
+        title="Manage Jobs"
+        role="Recruiter"
+      />
+    }
+  />
 
-        <Route
-          path="/recruiter/applicants"
-          element={
-            <Placeholder
-              title="Applicants"
-              role="Recruiter"
-            />
-          }
-        />
-      </Route>
+  <Route
+    path="/recruiter/applicants"
+    element={
+      <Placeholder
+        title="Applicants"
+        role="Recruiter"
+      />
+    }
+  />
+</Route>
 
       {/* Admin Routes */}
 

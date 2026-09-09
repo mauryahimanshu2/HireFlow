@@ -1,11 +1,11 @@
-﻿using HireFlow.DTOs.Recruiter;
+﻿using HireFlow.Data;
+using HireFlow.DTOs.Recruiter;
 using HireFlow.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-
-namespace HireFlow.Controllers;
 
 [ApiController]
 [Route("api/recruiters")]
@@ -13,10 +13,17 @@ namespace HireFlow.Controllers;
 public class RecruiterController : ControllerBase
 {
     private readonly IRecruiterService _recruiterService;
+    private readonly ICloudinaryService _cloudinaryService;
+    private readonly ApplicationDbContext _context;
 
-    public RecruiterController(IRecruiterService recruiterService)
+    public RecruiterController(
+        IRecruiterService recruiterService,
+        ICloudinaryService cloudinaryService,
+        ApplicationDbContext context)
     {
         _recruiterService = recruiterService;
+        _cloudinaryService = cloudinaryService;
+        _context = context;
     }
 
     [HttpPost("profile")]
@@ -111,6 +118,36 @@ public class RecruiterController : ControllerBase
         return Ok(new
         {
             message = "Recruiter profile deleted successfully."
+        });
+    }
+
+    [HttpPost("profile/image")]
+    public async Task<IActionResult> UploadProfileImage(IFormFile file)
+    {
+        int userId = GetUserId();
+
+        var profile = await _context.RecruiterProfiles
+            .FirstOrDefaultAsync(p => p.UserId == userId);
+
+        if (profile == null)
+        {
+            return NotFound(new
+            {
+                message = "Recruiter profile not found."
+            });
+        }
+
+        var imageUrl = await _cloudinaryService.UploadImageAsync(file);
+
+        profile.ProfileImageUrl = imageUrl;
+        profile.UpdatedAt = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync();
+
+        return Ok(new
+        {
+            message = "Profile image uploaded successfully.",
+            profileImageUrl = imageUrl
         });
     }
 
