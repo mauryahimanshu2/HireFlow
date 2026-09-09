@@ -4,6 +4,8 @@ import Login from '../pages/Login'
 import Register from '../pages/Register'
 import ProtectedRoute from './ProtectedRoute'
 import PublicRoute from './PublicRoute'
+import JobSeekerDashboard from '../pages/jobseeker/JobSeekerDashboard'
+import JobSeekerProfile from '../pages/jobseeker/JobSeekerProfile'
  
 
 function Home() {
@@ -93,42 +95,32 @@ function AppRoutes() {
       {/* Job Seeker Routes */}
 
       <Route
-        element={
-          <ProtectedRoute
-            allowedRoles={[ROLES.JOB_SEEKER]}
-          />
-        }
-      >
-        <Route
-          path="/jobseeker/dashboard"
-          element={
-            <Placeholder
-              title="Job Seeker Dashboard"
-              role="Job Seeker"
-            />
-          }
-        />
+  element={
+    <ProtectedRoute
+      allowedRoles={[ROLES.JOB_SEEKER]}
+    />
+  }
+>
+  <Route
+    path="/jobseeker/dashboard"
+    element={<JobSeekerDashboard />}
+  />
 
-        <Route
-          path="/jobseeker/profile"
-          element={
-            <Placeholder
-              title="Job Seeker Profile"
-              role="Job Seeker"
-            />
-          }
-        />
+  <Route
+    path="/jobseeker/profile"
+    element={<JobSeekerProfile />}
+  />
 
-        <Route
-          path="/jobseeker/applications"
-          element={
-            <Placeholder
-              title="My Applications"
-              role="Job Seeker"
-            />
-          }
-        />
-      </Route>
+  <Route
+    path="/jobseeker/applications"
+    element={
+      <Placeholder
+        title="My Applications"
+        role="Job Seeker"
+      />
+    }
+  />
+</Route>
 
       {/* Recruiter Routes */}
 
