@@ -64,12 +64,20 @@ function LoginForm() {
     }
 
     try {
-      await login({
-        email: formData.email.trim(),
-        password: formData.password,
-      })
+      const response = await login({
+  email: formData.email.trim(),
+  password: formData.password,
+})
 
-      navigate('/')
+if (response.role === 'JobSeeker') {
+  navigate('/jobseeker/dashboard')
+} else if (response.role === 'Recruiter') {
+  navigate('/recruiter/dashboard')
+} else if (response.role === 'Admin') {
+  navigate('/admin/dashboard')
+} else {
+  navigate('/')
+}
     } catch (error) {
       const message =
         error.response?.data?.message ||
