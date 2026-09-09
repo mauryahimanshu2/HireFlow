@@ -32,6 +32,10 @@ builder.Services.AddScoped<ICloudinaryService, CloudinaryService>();
 builder.Services.AddScoped<IRecruiterService, RecruiterService>();
 
 builder.Services.AddScoped<ICompanyService, CompanyService>();
+
+builder.Services.AddScoped<IJobService, JobService>();
+
+builder.Services.AddScoped<IApplicationService, ApplicationService>();
 // JWT Authentication
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -58,6 +62,17 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 builder.Services.AddAuthorization();
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider
+        .GetRequiredService<ApplicationDbContext>();
+
+    var passwordHasher = scope.ServiceProvider
+        .GetRequiredService<PasswordHasher>();
+
+    await AdminSeeder.SeedAsync(context, passwordHasher);
+}
 
 app.UseHttpsRedirection();
 

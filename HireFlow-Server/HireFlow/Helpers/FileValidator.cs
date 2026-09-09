@@ -55,9 +55,7 @@ public static class FileValidator
             return "Only JPG, JPEG, PNG and WEBP images are allowed.";
         }
 
-        if (!AllowedImageContentTypes.Contains(
-                file.ContentType,
-                StringComparer.OrdinalIgnoreCase))
+        if (string.IsNullOrWhiteSpace(file.ContentType))
         {
             return "Invalid image file type.";
         }
@@ -86,9 +84,7 @@ public static class FileValidator
             return "Only PDF, DOC and DOCX files are allowed.";
         }
 
-        if (!AllowedResumeContentTypes.Contains(
-                file.ContentType,
-                StringComparer.OrdinalIgnoreCase))
+        if (string.IsNullOrWhiteSpace(file.ContentType))
         {
             return "Invalid resume file type.";
         }
