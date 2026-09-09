@@ -4,7 +4,7 @@ namespace HireFlow.Services.Interfaces;
 
 public interface IAuthService
 {
-    Task<bool> RegisterAsync(RegisterDto dto);
+    Task<(bool Success, string Message)> RegisterAsync(RegisterDto dto);
 
     Task<LoginResponseDto?> LoginAsync(LoginDto dto);
 }

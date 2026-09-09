@@ -11,7 +11,6 @@ public class AuthService : IAuthService
 {
     private readonly ApplicationDbContext _context;
     private readonly PasswordHasher _passwordHasher;
-
     private readonly IJwtService _jwtService;
 
     public AuthService(
@@ -24,24 +23,52 @@ public class AuthService : IAuthService
         _jwtService = jwtService;
     }
 
-    public async Task<bool> RegisterAsync(RegisterDto dto)
+    public async Task<(bool Success, string Message)> RegisterAsync(
+        RegisterDto dto)
     {
-        // Check whether email already exists
+        string role = dto.Role.Trim();
+
+        if (!string.Equals(
+                role,
+                "JobSeeker",
+                StringComparison.OrdinalIgnoreCase) &&
+            !string.Equals(
+                role,
+                "Recruiter",
+                StringComparison.OrdinalIgnoreCase))
+        {
+            return (
+                false,
+                "Invalid role. Only JobSeeker or Recruiter registration is allowed."
+            );
+        }
+
+        role = string.Equals(
+            role,
+            "JobSeeker",
+            StringComparison.OrdinalIgnoreCase)
+            ? "JobSeeker"
+            : "Recruiter";
+
+        string email = dto.Email.Trim().ToLowerInvariant();
+
         bool emailExists = await _context.Users
-            .AnyAsync(u => u.Email == dto.Email);
+            .AnyAsync(u => u.Email == email);
 
         if (emailExists)
         {
-            return false;
+            return (
+                false,
+                "Email already exists."
+            );
         }
 
-        // Create new user
         var user = new User
         {
-            Name = dto.Name,
-            Email = dto.Email,
+            Name = dto.Name.Trim(),
+            Email = email,
             PasswordHash = _passwordHasher.HashPassword(dto.Password),
-            Role = dto.Role,
+            Role = role,
             IsBlocked = false,
             CreatedAt = DateTime.UtcNow
         };
@@ -50,27 +77,29 @@ public class AuthService : IAuthService
 
         await _context.SaveChangesAsync();
 
-        return true;
+        return (
+            true,
+            "Registration successful."
+        );
     }
 
     public async Task<LoginResponseDto?> LoginAsync(LoginDto dto)
     {
-        // Find user by email
+        string email = dto.Email.Trim().ToLowerInvariant();
+
         var user = await _context.Users
-            .FirstOrDefaultAsync(u => u.Email == dto.Email);
+            .FirstOrDefaultAsync(u => u.Email == email);
 
         if (user == null)
         {
             return null;
         }
 
-        // Check whether user is blocked
         if (user.IsBlocked)
         {
             return null;
         }
 
-        // Verify password
         bool passwordValid = _passwordHasher.VerifyPassword(
             dto.Password,
             user.PasswordHash
@@ -81,7 +110,6 @@ public class AuthService : IAuthService
             return null;
         }
 
-        // JWT will be added here later
         return new LoginResponseDto
         {
             UserId = user.Id,

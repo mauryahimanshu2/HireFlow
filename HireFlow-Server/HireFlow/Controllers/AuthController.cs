@@ -15,27 +15,25 @@ public class AuthController : ControllerBase
         _authService = authService;
     }
 
-    // POST: api/auth/register
     [HttpPost("register")]
     public async Task<IActionResult> Register(RegisterDto dto)
     {
-        bool result = await _authService.RegisterAsync(dto);
+        var result = await _authService.RegisterAsync(dto);
 
-        if (!result)
+        if (!result.Success)
         {
             return BadRequest(new
             {
-                message = "Email already exists."
+                message = result.Message
             });
         }
 
         return Ok(new
         {
-            message = "Registration successful."
+            message = result.Message
         });
     }
 
-    // POST: api/auth/login
     [HttpPost("login")]
     public async Task<IActionResult> Login(LoginDto dto)
     {
