@@ -1,18 +1,22 @@
 function App() {
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-      <div className="bg-white p-8 rounded-xl shadow-lg text-center">
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+      <div className="w-full max-w-lg rounded-2xl bg-white p-8 shadow-lg text-center">
         <h1 className="text-4xl font-bold text-blue-600">
           HireFlow
         </h1>
 
         <p className="mt-3 text-gray-600">
-          Tailwind CSS is working!
+          Job Portal Management System
         </p>
 
-        <button className="mt-6 px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-          Test Button
-        </button>
+        <div className="mt-6 rounded-lg bg-green-50 p-4 text-green-700">
+          Frontend setup completed successfully.
+        </div>
+
+        <div className="mt-4 text-sm text-gray-500">
+          React + Tailwind CSS + Axios + React Router
+        </div>
       </div>
     </div>
   )
