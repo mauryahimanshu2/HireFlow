@@ -20,6 +20,12 @@ Thumbs.db
 
 # Environment files
 .env
+.env.local
+.env.*.local
 
 # Local ASP.NET configuration
 appsettings.Development.json
+
+# Node.js / React
+node_modules/
+dist/
