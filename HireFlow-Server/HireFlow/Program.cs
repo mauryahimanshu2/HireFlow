@@ -35,6 +35,8 @@ builder.Services.AddScoped<ICompanyService, CompanyService>();
 
 builder.Services.AddScoped<IJobService, JobService>();
 
+builder.Services.AddScoped<IAdminService, AdminService>();
+
 builder.Services.AddScoped<IApplicationService, ApplicationService>();
 // JWT Authentication
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
